@@ -16,6 +16,7 @@ typedef struct {
 /* Novos algoritmos entram nesta lista conforme forem implementados. */
 static const Algoritmo ALGORITMOS[] = {
     { "bubble", bubble_sort },
+    { "heap",   heap_sort   },
 };
 static const int NUM_ALGORITMOS = sizeof(ALGORITMOS) / sizeof(ALGORITMOS[0]);
 

@@ -29,5 +29,6 @@ void zerar_contadores(void);
    Todos com a mesma assinatura: ordenam v[0..n-1] em ordem crescente, no lugar. */
 
 void bubble_sort(int *v, int n);
+void heap_sort(int *v, int n);
 
 #endif
