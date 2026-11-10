@@ -1,0 +1,5 @@
+# executaveis e objetos
+*.o
+*.exe
+teste_dados
+main
