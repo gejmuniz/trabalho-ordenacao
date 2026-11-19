@@ -174,3 +174,44 @@ void merge_sort(int *v, int n) {
     merge_sort_rec(v, aux, 0, n - 1);
     free(aux);
 }
+static void trocar(int *a, int *b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+    CONTA_TROCA();
+}
+
+static int particionar(int *a, int esq, int dir) {
+    int pivo = a[dir];
+    int i = esq - 1;
+
+    for (int j = esq; j < dir; j++) {
+        CONTA_COMPARACAO();
+        if (a[j] <= pivo) {
+            i++;
+            if (i != j) {
+                trocar(&a[i], &a[j]);
+            }
+        }
+    }
+
+    if (i + 1 != dir) {
+        trocar(&a[i + 1], &a[dir]);
+    }
+
+    return i + 1;
+}
+
+static void quick_sort_recursivo(int *a, int esq, int dir) {
+    if (esq < dir) {
+        int p = particionar(a, esq, dir);
+        quick_sort_recursivo(a, esq, p - 1);
+        quick_sort_recursivo(a, p + 1, dir);
+    }
+}
+
+void quick_sort(int *a, int n) {
+    if (a != NULL && n > 1) {
+        quick_sort_recursivo(a, 0, n - 1);
+    }
+}
