@@ -6,3 +6,4 @@ main
 # resultados do piloto (apenas teste)
 dados/piloto_*
 dados/ambiente_piloto.txt
+graficos/piloto_*
