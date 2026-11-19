@@ -175,11 +175,11 @@ O script de análise deve **separar** as execuções `ok` das demais: as outras 
 - [x] HeapSort
 - [x] MergeSort
 - [ ] QuickSort (melhorado e ingênuo)
-- [ ] Programa de medição (`main.c`) e script que roda a matriz de experimentos
+- [x] Programa de medição (`main.c`) e script que roda a matriz de experimentos
 
 ### Experimentos
 - [ ] Fechar os itens "Pendente de decisão" (seção 3)
-- [ ] Piloto (n = 100 e 1.000)
+- [x] Piloto (n = 100 e 1.000)
 - [ ] Matriz completa (até 100.000)
 - [ ] Teste de estresse (aleatório até 1.000.000)
 - [ ] Documentar o ambiente: processador, RAM, versão do Windows, versão do gcc, opções de compilação, hash do commit usado
