@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "algoritmos.h"
 
 long long comparacoes = 0;
@@ -95,4 +96,81 @@ void heap_sort(int *v, int n) {
         CONTA_TROCA();
         sift_down(v, fim, 0);                          /* heap agora tem tamanho fim */
     }
+}
+
+/* ======================= MergeSort =======================
+   Origem: versão clássica top-down (slides da disciplina / Cormen, cap. 2).
+
+   Ideia (dividir e conquistar):
+     1) DIVIDIR: parte o vetor ao meio, recursivamente, até pedaços de 1 elemento
+        (um pedaço de 1 elemento já está ordenado).
+     2) INTERCALAR (merge): junta duas metades já ordenadas numa só,
+        sempre pegando o menor entre os "primeiros da fila" de cada metade.
+
+   Custo: log2(n) níveis de divisão; em cada nível, os merges movem n elementos
+   no total -> O(n log n) em QUALQUER distribuição (a divisão nunca depende
+   dos valores, sempre corta no meio).
+
+   Decisões:
+     - Vetor auxiliar alocado UMA VEZ em merge_sort() e reaproveitado em todas
+       as chamadas. Alocar dentro da recursão faria n-1 mallocs e estaríamos
+       medindo o malloc, não o algoritmo.
+     - "<=" no merge: entre iguais, o da metade ESQUERDA vem primeiro
+       -> mantém a ordem original dos iguais -> ESTÁVEL.
+     - SEM a otimização "se v[meio] <= v[meio+1], pular o merge":
+       ela tornaria o vetor ordenado O(n) e esconderia a característica
+       teórica principal do MergeSort (tempo igual em qualquer distribuição).
+     - Contadores: o MergeSort não faz trocas; o contador "trocas" registra
+       cada CÓPIA de elemento (para o vetor auxiliar e de volta).
+
+   Características: estável, NÃO in-place (auxiliar de n elementos),
+   recursivo (profundidade da recursão ~ log2(n): ~20 para n = 1.000.000).
+   ========================================================= */
+
+/* Intercala v[ini..meio] e v[meio+1..fim], ambos já ordenados. */
+static void intercalar(int *v, int *aux, int ini, int meio, int fim) {
+    /* Copia o trecho para o auxiliar; o resultado é escrito de volta em v. */
+    for (int k = ini; k <= fim; k++) {
+        aux[k] = v[k];
+        CONTA_TROCA();
+    }
+
+    int i = ini;        /* próximo da metade esquerda (em aux) */
+    int j = meio + 1;   /* próximo da metade direita  (em aux) */
+    int k = ini;        /* próxima posição a preencher em v   */
+
+    /* Enquanto as duas metades têm elementos: pega o menor. */
+    while (i <= meio && j <= fim) {
+        CONTA_COMPARACAO();
+        if (aux[i] <= aux[j])           /* "<=": empate favorece a esquerda (estável) */
+            v[k++] = aux[i++];
+        else
+            v[k++] = aux[j++];
+        CONTA_TROCA();
+    }
+
+    /* Uma metade acabou: o que sobrou da outra já está ordenado,
+       basta copiar (sem comparações). */
+    while (i <= meio) { v[k++] = aux[i++]; CONTA_TROCA(); }
+    while (j <= fim)  { v[k++] = aux[j++]; CONTA_TROCA(); }
+}
+
+static void merge_sort_rec(int *v, int *aux, int ini, int fim) {
+    if (ini >= fim) return;                 /* 0 ou 1 elemento: já ordenado */
+
+    int meio = ini + (fim - ini) / 2;       /* evita overflow de (ini + fim) */
+    merge_sort_rec(v, aux, ini, meio);
+    merge_sort_rec(v, aux, meio + 1, fim);
+    intercalar(v, aux, ini, meio, fim);
+}
+
+void merge_sort(int *v, int n) {
+    if (n < 2) return;
+
+    int *aux = malloc((size_t)n * sizeof(int));
+    if (aux == NULL) return;   /* sem memória: o vetor fica desordenado
+                                  e o validador acusa a falha */
+
+    merge_sort_rec(v, aux, 0, n - 1);
+    free(aux);
 }
