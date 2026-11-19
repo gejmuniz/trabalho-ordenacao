@@ -173,7 +173,7 @@ O script de análise deve **separar** as execuções `ok` das demais: as outras 
 - [x] Gerador de dados e validador, com testes
 - [x] BubbleSort
 - [x] HeapSort
-- [ ] MergeSort
+- [x] MergeSort
 - [ ] QuickSort (melhorado e ingênuo)
 - [ ] Programa de medição (`main.c`) e script que roda a matriz de experimentos
 
