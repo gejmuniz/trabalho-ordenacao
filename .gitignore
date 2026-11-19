@@ -3,3 +3,6 @@
 *.exe
 teste_dados
 main
+# resultados do piloto (apenas teste)
+dados/piloto_*
+dados/ambiente_piloto.txt
