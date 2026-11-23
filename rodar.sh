@@ -54,11 +54,12 @@ DADOS="$RAIZ/dados"
 TEMPOS="$DADOS/${PREFIXO}tempos.csv"
 CONTAGENS="$DADOS/${PREFIXO}contagens.csv"
 AMBIENTE="$DADOS/ambiente_${MODO}.txt"
+ERROS="$DADOS/erros_${MODO}.log"       # mensagens de erro dos programas (antes eram descartadas)
 mkdir -p "$DADOS"
 
 # Piloto pode ser refeito à vontade; os dados de verdade nunca são sobrescritos.
 if [ "$MODO" = "piloto" ]; then
-    rm -f "$TEMPOS" "$CONTAGENS"
+    rm -f "$TEMPOS" "$CONTAGENS" "$ERROS"
 elif [ -e "$TEMPOS" ] || [ -e "$CONTAGENS" ]; then
     echo "ERRO: $TEMPOS ou $CONTAGENS já existe."
     echo "Para refazer, apague ou renomeie esses arquivos antes."
@@ -72,6 +73,30 @@ gcc $CFLAGS          -o medir  main.c algoritmos.c dados.c validacao.c || exit 1
 gcc $CFLAGS -DCONTAR -o contar main.c algoritmos.c dados.c validacao.c || exit 1
 MEDIR="./medir";  [ -f medir.exe ]  && MEDIR="./medir.exe"
 CONTAR="./contar"; [ -f contar.exe ] && CONTAR="./contar.exe"
+
+# Teste de partida: no Windows, o antivírus pode bloquear um .exe recém-compilado
+# por alguns segundos ("Permission denied"). Sem este teste, o bloqueio seria
+# registrado como "crash" em todos os cenários. Tenta por até ~30 s antes de começar.
+echo "== Testando os executaveis =="
+TESTE_CSV="$DADOS/.teste_partida.csv"
+pronto=""
+for tentativa in 1 2 3 4 5 6 7 8 9 10; do
+    rm -f "$TESTE_CSV"
+    if $MEDIR bubble aleatorio 10 1 1 "$TESTE_CSV" 2>>"$ERROS" && \
+       $CONTAR bubble aleatorio 10 1 "$TESTE_CSV.c" 2>>"$ERROS"; then
+        pronto="sim"; break
+    fi
+    echo "  executaveis ainda nao liberados pelo Windows (tentativa $tentativa); aguardando 3 s..."
+    sleep 3
+done
+rm -f "$TESTE_CSV" "$TESTE_CSV.c"
+if [ -z "$pronto" ]; then
+    echo "ERRO: nao foi possivel executar $MEDIR. Nenhum dado foi gravado."
+    echo "Rode manualmente para ver a mensagem:  cd src && $MEDIR bubble aleatorio 10 1 1 teste.csv"
+    echo "Mensagens registradas em: $ERROS"
+    exit 1
+fi
+echo "  ok"
 
 # ---------- 2. Registro do ambiente (vai para a Metodologia) ----------
 {
@@ -105,6 +130,7 @@ status_de() {
         2)   echo erro_validacao ;;
         124) echo timeout ;;
         1)   echo erro_uso ;;
+        126|127) echo erro_execucao ;;   # programa não pôde ser iniciado (bloqueado / não encontrado)
         *)   echo crash ;;
     esac
 }
@@ -128,23 +154,31 @@ for alg in $ALGORITMOS; do
 
             # Tempo
             inicio=$(date +%s)
-            timeout "$limite" $MEDIR "$alg" "$dist" "$n" "$reps" "$SEMENTE" "$TEMPOS" 2>/dev/null
-            st=$(status_de $?)
+            timeout "$limite" $MEDIR "$alg" "$dist" "$n" "$reps" "$SEMENTE" "$TEMPOS" 2>>"$ERROS"
+            cod=$?
+            st=$(status_de $cod)
             dur=$(( $(date +%s) - inicio ))
 
+            if [ "$st" = "erro_execucao" ]; then
+                echo "ERRO: o medir nao pode ser iniciado (codigo $cod) em $alg/$dist/n=$n."
+                echo "Execucao interrompida para nao registrar falsos 'crash'. Veja $ERROS."
+                echo "Apague $TEMPOS e $CONTAGENS antes de rodar de novo."
+                exit 1
+            fi
             if [ "$st" = "erro_uso" ]; then
                 echo "ERRO: o medir nao reconhece '$alg' ou '$dist' -- confira ALGORITMOS no topo do script"
                 exit 1
             fi
             if [ "$st" = "timeout" ] || [ "$st" = "crash" ]; then
-                printf "  %-14s %-17s n=%-8s %s (%ss)\n" "$alg" "$dist" "$n" "$st" "$dur"
+                printf "  %-14s %-17s n=%-8s %s (%ss, codigo %s)\n" "$alg" "$dist" "$n" "$st" "$dur" "$cod"
+                echo "$alg $dist n=$n: $st (codigo de saida $cod)" >> "$ERROS"
                 registrar_falha "$alg" "$dist" "$n" "$st"
                 falhou="sim"
                 continue
             fi
 
             # Contagem (uma execução; só se a medição de tempo foi bem-sucedida)
-            timeout "$LIMITE_S" $CONTAR "$alg" "$dist" "$n" "$SEMENTE" "$CONTAGENS" 2>/dev/null
+            timeout "$LIMITE_S" $CONTAR "$alg" "$dist" "$n" "$SEMENTE" "$CONTAGENS" 2>>"$ERROS"
             stc=$(status_de $?)
             if [ "$stc" = "timeout" ] || [ "$stc" = "crash" ]; then
                 echo "$alg,$dist,$n,$SEMENTE,,,$stc" >> "$CONTAGENS"
@@ -161,3 +195,4 @@ echo "== Pronto =="
 echo "Tempos:    $TEMPOS"
 echo "Contagens: $CONTAGENS"
 echo "Ambiente:  $AMBIENTE"
+echo "Erros:     $ERROS"
