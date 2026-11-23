@@ -16,8 +16,8 @@ set -u
 
 # ===================== CONFIGURAÇÃO (decisões da dupla) =====================
 
-# Algoritmos a medir. Acrescentar "quick quick_ingenuo" quando estiverem no main.c.
-ALGORITMOS="bubble heap merge"
+# Algoritmos a medir (os nomes são os da tabela ALGORITMOS[] do main.c).
+ALGORITMOS="bubble heap merge quick quick_ingenuo"
 
 DISTRIBUICOES="aleatorio crescente decrescente iguais poucos_distintos"
 

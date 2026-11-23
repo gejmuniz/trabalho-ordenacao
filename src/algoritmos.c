@@ -174,6 +174,24 @@ void merge_sort(int *v, int n) {
     merge_sort_rec(v, aux, 0, n - 1);
     free(aux);
 }
+
+/* ======================= QuickSort =======================
+   Origem: Cormen, cap. 7 (Lomuto) e problema 7-1 (Hoare); mediana de três
+   conforme Sedgewick. Duas versões, para comparar o efeito da IMPLEMENTAÇÃO.
+
+   Ideia (dividir e conquistar): escolhe um PIVÔ e PARTICIONA o trecho:
+   menores (ou iguais) de um lado, maiores (ou iguais) do outro.
+   Depois ordena cada lado recursivamente. Não precisa de "merge":
+   depois da partição, cada lado já está no lugar certo em relação ao outro.
+
+   O custo depende de quão EQUILIBRADAS são as partições:
+     - meio a meio  -> log2(n) níveis  -> O(n log n)
+     - 0 e n-1      -> n níveis        -> O(n^2) e recursão com profundidade n
+
+   Características: NÃO estável (a partição troca elementos distantes),
+   in-place (mas usa a pilha da recursão), recursivo.
+   ========================================================= */
+
 static void trocar(int *a, int *b) {
     int temp = *a;
     *a = *b;
@@ -181,9 +199,20 @@ static void trocar(int *a, int *b) {
     CONTA_TROCA();
 }
 
-static int particionar(int *a, int esq, int dir) {
+/* ---------- Versão INGÊNUA: pivô = último elemento, partição de Lomuto ----------
+   Existe para DEMONSTRAR o pior caso:
+     - vetor crescente: o pivô (último) é o MAIOR -> partições de n-1 e 0;
+     - vetor decrescente: o pivô é o MENOR -> mesma coisa;
+     - todos iguais: "a[j] <= pivo" é sempre verdadeiro -> todos vão para
+       a esquerda -> partições de n-1 e 0.
+   Em todos esses casos: O(n^2) e profundidade de recursão ~n,
+   o que pode ESTOURAR A PILHA com n grande (resultado esperado no estresse).
+   Detalhe desta implementação: não troca um elemento com ele mesmo (i != j),
+   então só conta trocas que realmente movem elementos. */
+
+static int particiona_lomuto(int *a, int esq, int dir) {
     int pivo = a[dir];
-    int i = esq - 1;
+    int i = esq - 1;                 /* fim da região dos "<= pivo" */
 
     for (int j = esq; j < dir; j++) {
         CONTA_COMPARACAO();
@@ -196,22 +225,83 @@ static int particionar(int *a, int esq, int dir) {
     }
 
     if (i + 1 != dir) {
-        trocar(&a[i + 1], &a[dir]);
+        trocar(&a[i + 1], &a[dir]);  /* põe o pivô entre as duas regiões */
     }
 
-    return i + 1;
+    return i + 1;                    /* posição final do pivô */
 }
 
-static void quick_sort_recursivo(int *a, int esq, int dir) {
+static void quick_ingenuo_rec(int *a, int esq, int dir) {
     if (esq < dir) {
-        int p = particionar(a, esq, dir);
-        quick_sort_recursivo(a, esq, p - 1);
-        quick_sort_recursivo(a, p + 1, dir);
+        int p = particiona_lomuto(a, esq, dir);
+        quick_ingenuo_rec(a, esq, p - 1);    /* o pivô já está no lugar certo */
+        quick_ingenuo_rec(a, p + 1, dir);
     }
 }
 
-void quick_sort(int *a, int n) {
+void quick_sort_ingenuo(int *a, int n) {
     if (a != NULL && n > 1) {
-        quick_sort_recursivo(a, 0, n - 1);
+        quick_ingenuo_rec(a, 0, n - 1);
+    }
+}
+
+/* ---------- Versão MELHORADA: mediana de três + partição de Hoare ----------
+   Três decisões, cada uma corrigindo um problema da versão ingênua:
+
+   1) MEDIANA DE TRÊS: o pivô é a mediana entre v[ini], v[meio] e v[fim].
+      Em vetores crescentes/decrescentes, o elemento do meio é a mediana
+      exata -> partições perfeitamente equilibradas.
+
+   2) PARTIÇÃO DE HOARE: dois índices andam um em direção ao outro e
+      ambos PARAM em elementos IGUAIS ao pivô, trocando-os. Assim os iguais
+      se dividem entre os dois lados -> com todos iguais, partições meio a meio.
+      (Na de Lomuto, todos os iguais iam para o mesmo lado.)
+
+   3) RECURSÃO SÓ NO LADO MENOR: o lado maior é tratado pelo laço while
+      (eliminação da recursão de cauda). Como o lado menor tem no máximo
+      metade dos elementos, a profundidade da pilha fica <= log2(n),
+      mesmo no pior caso -> nunca estoura a pilha. */
+
+/* Ordena v[ini], v[meio], v[fim] entre si; a mediana fica em v[meio]. */
+static int mediana_de_tres(int *v, int ini, int fim) {
+    int meio = ini + (fim - ini) / 2;
+    CONTA_COMPARACAO(); if (v[meio] < v[ini])  trocar(&v[meio], &v[ini]);
+    CONTA_COMPARACAO(); if (v[fim]  < v[ini])  trocar(&v[fim],  &v[ini]);
+    CONTA_COMPARACAO(); if (v[fim]  < v[meio]) trocar(&v[fim],  &v[meio]);
+    return v[meio];
+}
+
+/* Devolve j tal que v[ini..j] <= pivo <= v[j+1..fim]
+   (o pivô NÃO fica necessariamente na posição final, diferente de Lomuto). */
+static int particiona_hoare(int *v, int ini, int fim) {
+    int pivo = mediana_de_tres(v, ini, fim);
+    int i = ini - 1;
+    int j = fim + 1;
+
+    while (1) {
+        do { i++; CONTA_COMPARACAO(); } while (v[i] < pivo);   /* para em >= pivo */
+        do { j--; CONTA_COMPARACAO(); } while (v[j] > pivo);   /* para em <= pivo */
+        if (i >= j) return j;                                  /* índices se cruzaram */
+        trocar(&v[i], &v[j]);
+    }
+}
+
+static void quick_rec(int *v, int ini, int fim) {
+    while (ini < fim) {
+        int j = particiona_hoare(v, ini, fim);
+
+        if (j - ini < fim - j) {          /* lado esquerdo é o menor */
+            quick_rec(v, ini, j);         /*   recursão no menor      */
+            ini = j + 1;                  /*   laço continua no maior */
+        } else {                          /* lado direito é o menor   */
+            quick_rec(v, j + 1, fim);
+            fim = j;
+        }
+    }
+}
+
+void quick_sort(int *v, int n) {
+    if (v != NULL && n > 1) {
+        quick_rec(v, 0, n - 1);
     }
 }

@@ -18,6 +18,8 @@ static const Algoritmo ALGORITMOS[] = {
     { "bubble", bubble_sort },
     { "heap",   heap_sort   },
     { "merge",  merge_sort  },
+    { "quick",  quick_sort  },
+    { "quick_ingenuo", quick_sort_ingenuo },
 };
 static const int NUM_ALGORITMOS = sizeof(ALGORITMOS) / sizeof(ALGORITMOS[0]);
 
@@ -33,7 +35,7 @@ static void testar(const Algoritmo *a, Distribuicao d, int n) {
     a->funcao(v, n);
     int r = validar(v, referencia, n);
 
-    printf("  %-8s %-17s n=%-6d %-6s comparacoes=%-11lld trocas=%lld\n",
+    printf("  %-14s %-17s n=%-6d %-6s comparacoes=%-11lld trocas=%lld\n",
            a->nome, NOMES_DISTRIBUICAO[d], n,
            r == VALIDO ? "OK" : "ERRO", comparacoes, trocas);
     if (r != VALIDO) falhas++;

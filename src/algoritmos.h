@@ -31,5 +31,7 @@ void zerar_contadores(void);
 void bubble_sort(int *v, int n);
 void heap_sort(int *v, int n);
 void merge_sort(int *v, int n);
+void quick_sort(int *v, int n);           /* versão melhorada: mediana de três + Hoare */
+void quick_sort_ingenuo(int *v, int n);   /* versão ingênua: último elemento + Lomuto */
 
 #endif

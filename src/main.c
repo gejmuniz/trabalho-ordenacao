@@ -72,9 +72,8 @@ static const Algoritmo ALGORITMOS[] = {
     { "bubble", bubble_sort },
     { "heap",   heap_sort   },
     { "merge",  merge_sort  },
-    /* Descomentar quando o QuickSort estiver em algoritmos.c: */
-    /* { "quick",         quick_sort         }, */
-    /* { "quick_ingenuo", quick_sort_ingenuo }, */
+    { "quick",         quick_sort         },
+    { "quick_ingenuo", quick_sort_ingenuo },
 };
 static const int NUM_ALGORITMOS = sizeof(ALGORITMOS) / sizeof(ALGORITMOS[0]);
 
