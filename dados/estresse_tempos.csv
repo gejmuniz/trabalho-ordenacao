@@ -1,0 +1,14 @@
+algoritmo,distribuicao,n,repeticao,semente,tempo_s,status
+bubble,aleatorio,1000000,,2026,,timeout
+heap,aleatorio,1000000,1,2026,0.072429400,ok
+heap,aleatorio,1000000,2,2026,0.071574100,ok
+heap,aleatorio,1000000,3,2026,0.072844300,ok
+merge,aleatorio,1000000,1,2026,0.072942900,ok
+merge,aleatorio,1000000,2,2026,0.071944800,ok
+merge,aleatorio,1000000,3,2026,0.072279200,ok
+quick,aleatorio,1000000,1,2026,0.058942400,ok
+quick,aleatorio,1000000,2,2026,0.058738400,ok
+quick,aleatorio,1000000,3,2026,0.058791600,ok
+quick_ingenuo,aleatorio,1000000,1,2026,0.051092500,ok
+quick_ingenuo,aleatorio,1000000,2,2026,0.050987600,ok
+quick_ingenuo,aleatorio,1000000,3,2026,0.051220400,ok

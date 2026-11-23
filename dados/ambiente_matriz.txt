@@ -1,0 +1,10 @@
+Modo: matriz
+Inicio: 2026-11-23 16:35:40
+Commit: 72fc135
+Compilador: gcc.exe (Rev4, Built by MSYS2 project) 16.2.0
+Opcoes: -O2 -Wall -Wextra -std=c11
+Sistema: MINGW64_NT-10.0-26200 Georgia_Muniz 3.6.10-5a1665c8.x86_64 2026-09-28 10:40 UTC x86_64 Msys
+Semente: 2026
+Limite por repeticao: 60 s
+Algoritmos: bubble heap merge quick quick_ingenuo
+Fim: 2026-11-23 16:35:47

@@ -1,0 +1,6 @@
+algoritmo,distribuicao,n,semente,comparacoes,trocas,status
+bubble,aleatorio,1000000,2026,,,timeout
+heap,aleatorio,1000000,2026,36793608,19048881,ok
+merge,aleatorio,1000000,2026,18674836,39902848,ok
+quick,aleatorio,1000000,2026,27207325,5028079,ok
+quick_ingenuo,aleatorio,1000000,2026,24377910,12122713,ok
