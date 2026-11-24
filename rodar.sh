@@ -38,6 +38,15 @@ repeticoes_para() {
 # Opções de compilação (registradas em dados/ambiente_<modo>.txt).
 CFLAGS="-O2 -Wall -Wextra -std=c11"
 
+# No Windows, o ligador grava a data/hora da compilação dentro do .exe; cada
+# compilação gera então um arquivo "novo", que o Controle Inteligente de
+# Aplicativos precisa avaliar de novo (e às vezes bloqueia). Sem a data, o mesmo
+# código gera sempre o mesmo .exe: depois de liberado uma vez, continua liberado.
+case "$(uname -s)" in
+    MINGW*|MSYS*|CYGWIN*) LDFLAGS="-Wl,--no-insert-timestamp" ;;
+    *)                    LDFLAGS="" ;;
+esac
+
 # ============================================================================
 
 MODO="${1:-}"
@@ -69,25 +78,25 @@ fi
 # ---------- 1. Compilação ----------
 echo "== Compilando =="
 cd "$SRC" || exit 1
-gcc $CFLAGS          -o medir  main.c algoritmos.c dados.c validacao.c || exit 1
-gcc $CFLAGS -DCONTAR -o contar main.c algoritmos.c dados.c validacao.c || exit 1
+gcc $CFLAGS          -o medir  main.c algoritmos.c dados.c validacao.c $LDFLAGS || exit 1
+gcc $CFLAGS -DCONTAR -o contar main.c algoritmos.c dados.c validacao.c $LDFLAGS || exit 1
 MEDIR="./medir";  [ -f medir.exe ]  && MEDIR="./medir.exe"
 CONTAR="./contar"; [ -f contar.exe ] && CONTAR="./contar.exe"
 
 # Teste de partida: no Windows, o antivírus pode bloquear um .exe recém-compilado
-# por alguns segundos ("Permission denied"). Sem este teste, o bloqueio seria
-# registrado como "crash" em todos os cenários. Tenta por até ~30 s antes de começar.
+# ("Permission denied"). Sem este teste, o bloqueio seria registrado como
+# "crash" em todos os cenários. Tenta por até ~2 minutos antes de desistir.
 echo "== Testando os executaveis =="
 TESTE_CSV="$DADOS/.teste_partida.csv"
 pronto=""
-for tentativa in 1 2 3 4 5 6 7 8 9 10; do
+for tentativa in $(seq 1 20); do
     rm -f "$TESTE_CSV"
     if $MEDIR bubble aleatorio 10 1 1 "$TESTE_CSV" 2>>"$ERROS" && \
        $CONTAR bubble aleatorio 10 1 "$TESTE_CSV.c" 2>>"$ERROS"; then
         pronto="sim"; break
     fi
-    echo "  executaveis ainda nao liberados pelo Windows (tentativa $tentativa); aguardando 3 s..."
-    sleep 3
+    echo "  executaveis ainda nao liberados pelo Windows (tentativa $tentativa de 20); aguardando 6 s..."
+    sleep 6
 done
 rm -f "$TESTE_CSV" "$TESTE_CSV.c"
 if [ -z "$pronto" ]; then
@@ -107,7 +116,7 @@ echo "  ok"
         echo "ATENCAO: src/ tem alteracoes sem commit -- o hash acima nao descreve exatamente o codigo usado"
     fi
     echo "Compilador: $(gcc --version | head -1)"
-    echo "Opcoes: $CFLAGS"
+    echo "Opcoes: $CFLAGS $LDFLAGS"
     echo "Sistema: $(uname -a)"
     echo "Semente: $SEMENTE"
     echo "Limite por repeticao: ${LIMITE_S} s"
