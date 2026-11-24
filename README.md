@@ -178,17 +178,17 @@ O script de análise deve **separar** as execuções `ok` das demais: as outras 
 - [x] Programa de medição (`main.c`) e script que roda a matriz de experimentos
 
 ### Experimentos
-- [ ] Fechar os itens "Pendente de decisão" (seção 3)
+- [x] Fechar os itens "Pendente de decisão" (seção 3)
 - [x] Piloto (n = 100 e 1.000)
-- [ ] Matriz completa (até 100.000)
-- [ ] Teste de estresse (aleatório até 1.000.000)
-- [ ] Documentar o ambiente: processador, RAM, versão do Windows, versão do gcc, opções de compilação, hash do commit usado
+- [x] Matriz completa (até 100.000)
+- [x] Teste de estresse (aleatório até 1.000.000)
+- [x] Documentar o ambiente: processador, RAM, versão do Windows, versão do gcc, opções de compilação, hash do commit usado
 
 ### Análise
-- [ ] Script Python (pandas + matplotlib) que lê `tempos.csv` e `contagens.csv` e calcula média, mediana e desvio-padrão por cenário — pode ser feito antes dos dados reais, com um CSV de exemplo no formato da seção 4
-- [ ] Gráfico 1 — tempo × tamanho (sugestão: escala log-log; O(n²) aparece com inclinação ~2, O(n log n) com ~1)
-- [ ] Gráfico 2 — distribuição × desempenho, n fixo (sugestão: barras agrupadas, n = 10.000)
-- [ ] Gráfico 3 — estresse: tempos no aleatório crescendo, com o limite de tempo como linha horizontal
+- [x] Script Python (pandas + matplotlib) que lê `tempos.csv` e `contagens.csv` e calcula média, mediana e desvio-padrão por cenário — pode ser feito antes dos dados reais, com um CSV de exemplo no formato da seção 4
+- [x] Gráfico 1 — tempo × tamanho (sugestão: escala log-log; O(n²) aparece com inclinação ~2, O(n log n) com ~1)
+- [x] Gráfico 2 — distribuição × desempenho, n fixo (sugestão: barras agrupadas, n = 10.000)
+- [x] Gráfico 3 — estresse: tempos no aleatório crescendo, com o limite de tempo como linha horizontal
 - [ ] Tabela-síntese final comparando os quatro algoritmos
 
 ### Relatório
