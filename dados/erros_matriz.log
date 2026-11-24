@@ -1,0 +1,3 @@
+quick_ingenuo crescente n=100000: crash (codigo de saida 127)
+quick_ingenuo decrescente n=100000: crash (codigo de saida 127)
+quick_ingenuo iguais n=100000: crash (codigo de saida 127)
