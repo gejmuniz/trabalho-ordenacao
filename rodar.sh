@@ -88,17 +88,22 @@ CONTAR="./contar"; [ -f contar.exe ] && CONTAR="./contar.exe"
 # "crash" em todos os cenários. Tenta por até ~2 minutos antes de desistir.
 echo "== Testando os executaveis =="
 TESTE_CSV="$DADOS/.teste_partida.csv"
+executaveis_rodam() {   # 0 (sucesso) se medir e contar conseguem rodar um caso minúsculo
+    rm -f "$TESTE_CSV" "$TESTE_CSV.c"
+    $MEDIR bubble aleatorio 10 1 1 "$TESTE_CSV" 2>>"$ERROS" && \
+    $CONTAR bubble aleatorio 10 1 "$TESTE_CSV.c" 2>>"$ERROS"
+    local r=$?
+    rm -f "$TESTE_CSV" "$TESTE_CSV.c"
+    return $r
+}
 pronto=""
 for tentativa in $(seq 1 20); do
-    rm -f "$TESTE_CSV"
-    if $MEDIR bubble aleatorio 10 1 1 "$TESTE_CSV" 2>>"$ERROS" && \
-       $CONTAR bubble aleatorio 10 1 "$TESTE_CSV.c" 2>>"$ERROS"; then
+    if executaveis_rodam; then
         pronto="sim"; break
     fi
     echo "  executaveis ainda nao liberados pelo Windows (tentativa $tentativa de 20); aguardando 6 s..."
     sleep 6
 done
-rm -f "$TESTE_CSV" "$TESTE_CSV.c"
 if [ -z "$pronto" ]; then
     echo "ERRO: nao foi possivel executar $MEDIR. Nenhum dado foi gravado."
     echo "Rode manualmente para ver a mensagem:  cd src && $MEDIR bubble aleatorio 10 1 1 teste.csv"
@@ -168,11 +173,18 @@ for alg in $ALGORITMOS; do
             st=$(status_de $cod)
             dur=$(( $(date +%s) - inicio ))
 
+            # Códigos 126/127 podem ser bloqueio do Windows OU, no Windows, um crash
+            # real (ex.: estouro de pilha) relatado com esse código. Para distinguir,
+            # testa de novo se o medir consegue rodar: se consegue, foi crash do algoritmo.
             if [ "$st" = "erro_execucao" ]; then
-                echo "ERRO: o medir nao pode ser iniciado (codigo $cod) em $alg/$dist/n=$n."
-                echo "Execucao interrompida para nao registrar falsos 'crash'. Veja $ERROS."
-                echo "Apague $TEMPOS e $CONTAGENS antes de rodar de novo."
-                exit 1
+                if executaveis_rodam; then
+                    st="crash"
+                else
+                    echo "ERRO: o medir nao pode ser iniciado (codigo $cod) em $alg/$dist/n=$n."
+                    echo "Execucao interrompida para nao registrar falsos 'crash'. Veja $ERROS."
+                    echo "Apague $TEMPOS e $CONTAGENS antes de rodar de novo."
+                    exit 1
+                fi
             fi
             if [ "$st" = "erro_uso" ]; then
                 echo "ERRO: o medir nao reconhece '$alg' ou '$dist' -- confira ALGORITMOS no topo do script"
@@ -189,7 +201,8 @@ for alg in $ALGORITMOS; do
             # Contagem (uma execução; só se a medição de tempo foi bem-sucedida)
             timeout "$LIMITE_S" $CONTAR "$alg" "$dist" "$n" "$SEMENTE" "$CONTAGENS" 2>>"$ERROS"
             stc=$(status_de $?)
-            if [ "$stc" = "timeout" ] || [ "$stc" = "crash" ]; then
+            [ "$stc" = "erro_execucao" ] && executaveis_rodam && stc="crash"
+            if [ "$stc" = "timeout" ] || [ "$stc" = "crash" ] || [ "$stc" = "erro_execucao" ]; then
                 echo "$alg,$dist,$n,$SEMENTE,,,$stc" >> "$CONTAGENS"
             fi
 
